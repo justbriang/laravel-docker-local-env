@@ -1,0 +1,154 @@
+version: '3'
+
+networks:
+  laravel:
+
+services:
+  site:
+    build:
+      context: ./dockerfiles
+      dockerfile: nginx.dockerfile
+      args:
+        - UID=${UID:-1001}
+        - GID=${GID:-1001}
+    container_name: nginx
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./src:/var/www/html:delegated
+      - ./data/certs:/etc/letsencrypt/:delegated
+    depends_on:
+      - php
+      - redis
+      - mysql
+      - meili
+
+    networks:
+      - laravel
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 3306:3306
+    volumes:
+      - ./mysql:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    networks:
+      - laravel
+
+  php:
+    build:
+      context: ./dockerfiles
+      dockerfile: php.dockerfile
+      args:
+        - UID=${UID:-1001}
+        - GID=${GID:-1001}
+    container_name: php
+    volumes:
+      - ./src:/var/www/html:delegated
+    networks:
+      - laravel
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+    networks:
+      - laravel
+
+  composer:
+    build:
+      context: ./dockerfiles
+      dockerfile: composer.dockerfile
+      args:
+        - UID=${UID:-1001}
+        - GID=${GID:-1001}
+    container_name: composer
+    volumes:
+     - ./src:/var/www/html:delegated
+    working_dir: /var/www/html
+    depends_on:
+      - php
+    user: laravel
+    entrypoint: ['composer', '--ignore-platform-reqs']
+    networks:
+      - laravel
+
+  npm:
+    image: node:19-alpine
+    container_name: npm
+    volumes:
+      - ./src:/var/www/html:delegated
+    ports:
+      - 3000:3000
+      - 3001:3001
+    working_dir: /var/www/html
+    entrypoint: ['npm']
+    networks:
+      - laravel
+  
+  meili:
+    image: getmeili/meilisearch
+    container_name: meili
+    restart: unless-stopped
+    ports:
+      - 7700:7700
+    networks:
+      - laravel
+
+  artisan:
+    build:
+      context: ./dockerfiles
+      dockerfile: php.dockerfile
+      args:
+        - UID=${UID:-1001}
+        - GID=${GID:-1001}
+    container_name: artisan
+    volumes:
+      - ./src:/var/www/html:delegated
+    depends_on:
+      - mysql
+    working_dir: /var/www/html
+    entrypoint: ['php', '/var/www/html/artisan']
+    networks:
+      - laravel
+
+  cron:
+    build: 
+      context: ./dockerfiles
+      dockerfile: cron.dockerfile
+    container_name: cron
+    volumes:
+      - ./src:/var/www/html:delegated
+    networks:
+      - laravel
+    depends_on:
+      - site
+  
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin
+    networks:
+      - laravel
+    ports:
+      - 8080:80
+    environment:
+      
+      PMA_HOST: mysql
+     
+    depends_on:
+      - mysql
+
+     

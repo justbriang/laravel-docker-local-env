@@ -1,0 +1,17 @@
+/mysql
+/todo-list/node_modules
+# /todo-list/public/build
+/todo-list/public/hot
+/todo-list/public/storage
+/todo-list/storage/*.key
+/todo-list/vendor
+/todo-list/.env
+/todo-list/.env.backup
+/todo-list/.phpunit.result.cache
+/todo-list/Homestead.json
+/todo-list/Homestead.yaml
+/todo-list/auth.json
+/todo-list/npm-debug.log
+/todo-list/yarn-error.log
+/.idea
+/.vscode
