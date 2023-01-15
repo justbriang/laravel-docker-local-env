@@ -14,6 +14,7 @@ It also includes a few more items, some of which include:
 - phpmyadmin
 - node
 - certbot-nginx -- help for installation of ssl cert during production
+- mysql volume -- persisting data during container restarts/shutdowns/recreation
 
 ## Usage
 
@@ -41,4 +42,3 @@ Three additional containers are included that handle Composer, NPM, and Artisan 
 ## Permissions Issues
 
 If you encounter any issues with filesystem permissions while visiting your application or running a container command, try checking out the read me [here](https://github.com/aschmelyun/docker-compose-laravel) for more tips.
-
